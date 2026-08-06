@@ -3,6 +3,7 @@ import argparse
 import os
 import subprocess
 
+# first set of bytes is what is matched, second is the patch (usually an "\x85" changing to an "\x84")
 supported_versions_to_bytes = {
     "6": [
         [b"\xfb\x00\x0f\x85\x1b\x03\x00\x00", b"\xfb\x00\x0f\x84\x1b\x03\x00\x00"],  # "certificate signed by unknown authority"
@@ -40,6 +41,7 @@ supported_versions_to_bytes = {
     "24": [[b"\x00\x00\x0f\x85\x7e\x01\x00\x00", b"\x00\x00\x0f\x84\x7e\x01\x00\x00"]],
     "25": [[b"\x00\x00\x0f\x85\x7e\x01\x00\x00", b"\x00\x00\x0f\x84\x7e\x01\x00\x00"]],
     "26": [[b"\x00\x00\x0f\x85\x95\x01\x00\x00", b"\x00\x00\x0f\x84\x95\x01\x00\x00"]],
+    "27": [[b"\x00\x00\x0f\x85\x81\x01\x00\x00\x49\x8b\x52\x10", b"\x00\x00\x0f\x84\x81\x01\x00\x00\x49\x8b\x52\x10"]],
 }
 
 
@@ -54,6 +56,13 @@ def replace_file_bytes(file_path, old_bytes, new_bytes, print_not_found=True):
     if position == -1:
         if print_not_found:
             print(f"[!] Error: unable to find TLS \"InsecureSkipVerify\" bytes to patch! (looked for: \"{old_bytes_str}\")")
+
+            with open(file_path, 'rb') as f:
+                data = f.read()
+                position = data.find(new_bytes)
+            if position > -1:
+                print(f"[?] Already patched? (found: \"{new_bytes_str}\")")
+
         return
 
     hex_position = hex(position)
@@ -155,7 +164,7 @@ def main():
 
     minor = version
     if "." in version:
-        minor = version.split(".")[1]
+        minor = version.split(".")[1].split("rc")[0]
 
     supported = supported_versions_to_bytes.get(minor, [])
     if not supported:
