@@ -38,7 +38,7 @@ HTTPS_PROXY=http://192.168.0.100:8080 ./test-bin
 2025/08/04 08:03:02 Get "https://ipinfo.io/": tls: failed to verify certificate: x509: certificate signed by unknown authority
 ```
 
-**After Patching:***
+**After Patching:**
 ```
 HTTPS_PROXY=http://192.168.0.100:8080 ./test-bin
 2025/08/04 08:03:25 {
